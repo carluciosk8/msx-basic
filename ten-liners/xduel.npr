@@ -1,0 +1,213 @@
+'==============================================================================
+'                         Artillery Duel Ex 10x256                            '
+'==============================================================================
+'
+'   Variables:  t(256) - Background landscape
+'   ----------  u(256) - Foreground landscape
+'               i - For-loop index
+'               R$ - Sprites data
+'               s - start position for generate landscape
+'               e - end position for generate landscape
+'               b - iterative position for generate landscape
+'               x - X coord for drawing
+'               y - Y coord for drawing
+'               a(2) - angle value for player 1
+'               v(2) - velocity value for player 1
+'               j - joystick value
+'               w - wind
+'               c - cloud 
+'
+'   Sprites:    0 - Cloud
+'   --------    1 - Player 1
+'               2 - Player 2
+'               3 - Bomb
+'
+@line 1,1
+
+'
+' Better error handling for printing meaningful error message
+'
+'on error goto ~error : goto ~start
+'~error:
+'    screen 0:
+'    ? "An error occurred in line: ";ERL:
+'    error err
+
+
+'
+' Initialization
+'
+~start:
+    screen 1:keyoff:width 32:
+    screen 2,2,rnd(-time):
+    color 10,5,5:
+    cls:
+    defint a,v:
+    dim t(256),u(256):
+
+
+'
+' Generate the playfield and background landscapes
+'
+~generate:
+    t(0) = 10*rnd(1) + 77 : u(0) = 50*rnd(1) + 140:
+    for k = 0 to 3:
+        read w,z:
+        s = 64*k:
+        e=s+64:
+        b=32:
+        t(e) = 10*rnd(1) + w:
+        u(e) = 50*rnd(1) + z:
+        for h = 0 to 5:
+            for i=s + b to e step b*2:
+                t(i)=int( (t(i-b)+t(i+b))/2 + rnd(1)*b - b/2 ):
+                u(i)=int( (u(i-b)+u(i+b))/2 + rnd(1)*b - b/2 ):
+            next:
+            b=b/2:
+        next:
+    next
+
+'
+' Draw 
+'
+~draw:
+    for x=0 to 255:
+        line(x, t(x))-(x, 191),6:
+        line(x, u(x))-(x+8, 191),11,bf:
+    next
+
+'
+' Draw some snow on top of background landscapes
+'
+~snow:
+    for x=32 to 96:
+        line(x, t(x))-(x, t(x)+8*rnd(1)),15:w=x+128:
+        line(w, t(w))-(w, t(w)+8*rnd(1)),15:
+    next
+
+'
+' Define sprites
+'
+~sprites:
+    on sprite gosub ~collision:
+    sprite on:
+    for i=0 to 127:
+        read R$:
+        vpoke 14336+i, val("&H"+R$):
+    next:
+    put sprite 1,(16,u(24)-15),1,1:
+    put sprite 2,(226,u(234)-15),1,2:
+    put sprite 0,(c,10),15,0
+
+
+'
+' Draw HUD
+'
+~hud:
+    open "grp:" as #1:
+    line(14, 0)-(240, 8),14,b:
+    line(0, 8)-(7, 8),14:
+    for i=0 to 1:
+        preset(128+i,9) : ? #1, "0123456789":
+        preset(24+i,1)  : ? #1, "PLAYER       B        P":
+    next:
+    poke &hFCAF,1:
+    locate 0, 1 : ? "@":locate 16, 1 : ? "          ":
+
+'
+' Variables definition
+'
+~variables:
+    p = 0:
+    a(0) = 45:
+    v(0) = 50:
+    a(1) = 45:
+    v(1) = 50:
+    w = 0.008*(rnd(1) - 0.5):
+    c = 128:
+    x0(0) = 32:
+    y0(0) = u(24)-16:
+    x0(1) = 225:
+    y0(1) = u(234)-16
+
+'
+' Main loop: player input
+'
+~loop:
+    put sprite 0,(c,56),15,0:
+    c = c + 666*w:
+    locate 9, 0 : ? p+1:
+    locate 17, 0 : ? a(p):
+    locate 26, 0 : ? v(p):
+    j=stick(0):
+    v(p) = v(p) - (1=j and v(p)<99) + (5=j and v(p)>0):
+    a(p) = a(p) - (3=j and a(p)<90) + (7=j and a(p)>0):
+~   r = a(p)*0.01745329:
+    m = 0.0347*v(p):
+    dx = m*cos(r + 3.141592*p):
+    dy = -m*sin(r):
+    if not strig(0) then ~loop
+
+'
+' Fire loop
+'
+~fire:
+    x = x0(p):
+    y = y0(p):
+    for i=0 to 1 step 0:
+        dx = dx + w:
+        dy = dy + 0.01027:
+        y = y + dy:
+        x = x + dx:
+        put sprite 3,(x,y),14,3:
+        put sprite 0,(c,56),15,0:
+        c = c + 666*w:
+        if x>255 or x<0 then ~explosion else if y>u(x) then ~explosion else
+    next
+
+'
+' Explosion
+'
+~explosion:
+    SOUND 0,0 : SOUND 6,21 : SOUND 7,247 : SOUND 8,16 : SOUND 13,0:
+    w = 0.008*(rnd(1) - 0.5):
+    p = (p + 1) mod 2:
+    goto ~loop
+
+'
+' Collision handling
+'
+~collision:
+    if y<96 then
+        return
+    else
+        screen 2:
+        line(98, 90)-(206, 102),15,b:
+        if x<128 then
+            preset(100,92):? #1, "PLAYER 2 WINS":
+            for i=0 to 10000:next:
+            run
+        else
+            preset(100,92):? #1, "PLAYER 1 WINS":
+            for i=0 to 10000:next:
+            run
+
+'
+' Data
+'
+~data:
+
+data 26,140, 53,77, 26,140, 81,140,
+
+     00,28,55,6B,55,3F,01,54,AA,7E,B7,FF,DC,58,3D,00,
+     3C,DE,77,DB,77,DF,FF,FE,3C,00,20,5C,F6,EB,5E,B0,
+
+     00,00,00,00,00,0F,1F,3F,7F,FF,FF,FF,FF,0F,3F,7F,
+     00,03,03,07,06,CE,EC,FC,F8,F8,E0,E0,E0,00,C0,E0
+
+~
+data 00,C0,C0,E0,60,73,37,3F,1F,1F,07,07,07,00,03,07,
+     00,00,00,00,00,F0,F8,FC,FE,FF,FF,FF,FF,F0,FC,FE,
+
+     40,E0,40,00,00,00,00,00,00,00,00,00,00,00,00,00,
+     00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
