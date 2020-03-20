@@ -32,7 +32,6 @@
 '    ? "An error occurred in line: " ; erl:
 '    error err
 
-
 '=============================================================================
 ~line1:
     dim t(256, 1):
@@ -130,14 +129,14 @@
 '=============================================================================
 '=============================================================================
 ~line5:
-    j=stick(0):
-    'j=stick(p+1):
+    'j=stick(0):
+    j=stick(p+1):
     for i = 0 to 1:
         g(p,i) = g(p,i) - (n(p,i)=j and g(p,i)<k(i)) + (v(p,i)=j and g(p,i)>0):
         locate l(i), 0 : ? g(p,i):
     next:
 
-    a = g(p,0)*0.01745:
+    a = g(p,0)*0.0175:
     b = -(2*p-1)*4*cos(a):
     o = -4*sin(a):
 
@@ -145,17 +144,17 @@
     y = h(p) + o:
 
     for i=5 to 3 step -2:
-        put sprite p+i, (x, y), 1, 2:
+        put sprite p+i, (x, y),,2:
         x = x + b:
         y = y + o:
     next:
 
-    if not strig(0) then ~line5
-    'if not strig(p+1) then ~line5
+    'if not strig(0) then ~line5
+    if not strig(p+1) then ~line5
 
 '=============================================================================
 ~line6:
-    m = g(p,1)*0.00666:
+    m = g(p,1)*0.01666:
     b = m*b:
     o = m*o:
     sound 1,1:
@@ -163,7 +162,7 @@
     sound 8,15:
     for i=0 to 1 step 0:
         b = b + w:
-        o = o + 0.02:
+        o = o + 0.0999:
         y = y + o:
         x = x + b:
         put sprite 2,(x-1, y-2):
@@ -171,7 +170,7 @@
         q = x and 0<x and x<256:
         if x<0 or x>255 or y>t(q, 1) then
             w = fnr(0.008, -0.004):
-            z=666*w:
+            z=999*w:
             p = (p + 1) mod 2:
             locate 9, 0 : ? p+1:
         else
@@ -242,7 +241,7 @@
 ~line10:
     data
     ' Terrain data
-    10,81,50,140 , 10,26,50,140 , 10,53,50,77 , 10,26,50,140 , 10,81,50,140,
+    10,81,65,120 , 10,26,85,100 , 10,53,120,64 , 10,26,85,100 , 10,81,65,120,
 
     ' Tank Sprite           Sound data
       3, 6, 7,7F,           0,
